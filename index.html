@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Lisanne's Eiwit Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #6C5CE7;
+      --primary-light: #A29BFE;
+      --primary-dark: #5A4BD1;
+      --accent: #00CEC9;
+      --bg: #F8F9FD;
+      --card: #FFFFFF;
+      --text: #2D3436;
+      --text-light: #636E72;
+      --border: #E8ECF0;
+      --success: #00B894;
+      --warning: #FDCB6E;
+      --danger: #E17055;
+      --shadow: 0 2px 12px rgba(108, 92, 231, 0.08);
+      --shadow-lg: 0 8px 32px rgba(108, 92, 231, 0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding-bottom: 100px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 20px 20px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(108, 92, 231, 0.3);
+    }
+
+    .header h1 {
+      font-size: 19px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    .daily-summary {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .summary-card {
+      flex: 1;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .summary-card .value {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .summary-card .label {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 99;
+      box-shadow: var(--shadow);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 14px 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-light);
+      border: none;
+      background: none;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-icon {
+      font-size: 20px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Pages */
+    .page { display: none; padding: 16px; }
+    .page.active { display: block; }
+
+    /* Search */
+    .search-box {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 14px 16px 14px 44px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-family: inherit;
+      background: var(--card);
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary-light);
+    }
+
+    .search-box::before {
+      content: "🔍";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+    }
+
+    /* Category pills */
+    .categories {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .categories::-webkit-scrollbar { display: none; }
+
+    .category-pill {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .category-pill.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Food card */
+    .food-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .food-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .food-card:active {
+      transform: scale(0.98);
+    }
+
+    .food-emoji {
+      font-size: 32px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    .food-info { flex: 1; }
+
+    .food-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .food-meta {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+
+    .food-protein {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary);
+      text-align: right;
+    }
+
+    .food-protein small {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-light);
+      display: block;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--card);
+      border-radius: 24px 24px 0 0;
+      width: 100%;
+      max-width: 500px;
+      padding: 24px 20px 40px;
+      max-height: 85vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+
+    .modal h2 {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .modal-emoji {
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .gram-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+      justify-content: center;
+    }
+
+    .gram-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--card);
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .gram-btn:active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .gram-input {
+      width: 100px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+      font-family: inherit;
+    }
+
+    .gram-input:focus { outline: none; border-color: var(--primary-light); }
+
+    .gram-label {
+      font-size: 14px;
+      color: var(--text-light);
+      text-align: center;
+    }
+
+    .modal-protein {
+      text-align: center;
+      margin: 16px 0;
+    }
+
+    .modal-protein .value {
+      font-size: 40px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .modal-protein .label {
+      font-size: 14px;
+      color: var(--text-light);
+    }
+
+    .add-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.15s;
+    }
+
+    .add-btn:active { transform: scale(0.98); }
+
+    /* Calculator page */
+    .calc-item {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow);
+      margin-bottom: 10px;
+    }
+
+    .calc-item .food-info { flex: 1; }
+
+    .remove-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: #FEE;
+      color: var(--danger);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-light);
+    }
+
+    .empty-state .icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state p { font-size: 15px; }
+
+    .goal-setting {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .goal-setting label {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .goal-input {
+      width: 80px;
+      padding: 10px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      font-family: inherit;
+    }
+
+    .goal-input:focus { outline: none; border-color: var(--primary-light); }
+
+    .clear-all-btn {
+      width: 100%;
+      padding: 14px;
+      background: none;
+      border: 2px solid var(--danger);
+      color: var(--danger);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+      font-family: inherit;
+    }
+
+    /* Scanner page */
+    .scanner-container {
+      text-align: center;
+    }
+
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 1;
+    }
+
+    .video-wrapper video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .scan-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .scan-frame {
+      width: 220px;
+      height: 220px;
+      border: 3px solid var(--accent);
+      border-radius: 20px;
+      box-shadow: 0 0 0 2000px rgba(0,0,0,0.4);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { border-color: var(--accent); }
+      50% { border-color: rgba(0, 206, 201, 0.4); }
+    }
+
+    .scan-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 20px;
+      font-family: inherit;
+    }
+
+    .manual-input {
+      margin-top: 20px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .manual-input input {
+      flex: 1;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    .manual-input input:focus { outline: none; border-color: var(--primary-light); }
+
+    .manual-input button {
+      padding: 14px 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .scan-result {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: var(--shadow-lg);
+      text-align: left;
+      display: none;
+    }
+
+    .scan-result.show { display: block; }
+
+    .scan-result h3 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .nutrient-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .nutrient-item {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .nutrient-item .n-value {
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .nutrient-item .n-label {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+
+    .nutrient-item.highlight {
+      background: linear-gradient(135deg, rgba(108,92,231,0.1), rgba(162,155,254,0.1));
+    }
+
+    .nutrient-item.highlight .n-value {
+      color: var(--primary);
+    }
+
+    .scan-status {
+      color: var(--text-light);
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 8px 0;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      z-index: 99;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--text-light);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: inherit;
+      transition: color 0.2s;
+    }
+
+    .nav-item.active { color: var(--primary); }
+    .nav-item .nav-icon { font-size: 24px; }
+
+    /* Nutrition facts mini table */
+    .nutrition-mini {
+      width: 100%;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    .nutrition-mini tr {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nutrition-mini td {
+      padding: 8px 0;
+    }
+
+    .nutrition-mini td:last-child {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    /* Protein level indicator */
+    .protein-level {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .protein-level.high { background: #E0F5EE; color: #00B894; }
+    .protein-level.medium { background: #FEF5E0; color: #E17055; }
+    .protein-level.low { background: #FEE; color: #E17055; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>💪 Lisanne's Eiwit Tracker</h1>
+  <div class="header-subtitle">Houd je dagelijkse eiwitinname bij</div>
+  <div class="daily-summary">
+    <div class="summary-card">
+      <div class="value" id="totalProtein">0g</div>
+      <div class="label">Gegeten</div>
+    </div>
+    <div class="summary-card">
+      <div class="value" id="goalProtein">0g</div>
+      <div class="label">Doel</div>
+    </div>
+    <div class="summary-card">
+      <div class="value" id="remainProtein">0g</div>
+      <div class="label">Resterend</div>
+    </div>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+  </div>
+</div>
+
+<!-- Pages -->
+<div class="page active" id="page-food">
+  <div class="search-box">
+    <input type="text" id="foodSearch" placeholder="Zoek voedingsmiddel...">
+  </div>
+
+  <div class="categories" id="categories"></div>
+
+  <div class="food-list" id="foodList"></div>
+</div>
+
+<div class="page" id="page-calc">
+  <div class="goal-setting">
+    <label>🎯 Dagelijks doel:</label>
+    <input type="number" class="goal-input" id="goalInput" value="60" min="0" max="500">
+    <span style="font-weight:600">gram</span>
+  </div>
+
+  <div id="calcList"></div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🥗</div>
+    <p>Nog niets toegevoegd.<br>Ga naar de database en voeg producten toe!</p>
+  </div>
+
+  <button class="clear-all-btn" id="clearAllBtn" style="display:none">🗑 Alles wissen</button>
+</div>
+
+<div class="page" id="page-scan">
+  <div class="scanner-container">
+    <div class="video-wrapper" id="videoWrapper" style="display:none">
+      <video id="scannerVideo" playsinline autoplay></video>
+      <div class="scan-overlay">
+        <div class="scan-frame"></div>
+      </div>
+    </div>
+
+    <button class="scan-btn" id="startScanBtn">📸 Start Camera Scanner</button>
+    <button class="scan-btn" id="stopScanBtn" style="display:none; background: var(--danger);">⏹ Stop Scanner</button>
+
+    <div class="manual-input">
+      <input type="text" id="barcodeInput" placeholder="Voer barcode in (bv. 8710400010531)">
+      <button id="barcodeSearchBtn">Zoek</button>
+    </div>
+
+    <div class="scan-status" id="scanStatus"></div>
+
+    <div class="scan-result" id="scanResult">
+      <h3 id="scanProductName">Product</h3>
+      <div class="nutrient-grid" id="nutrientGrid"></div>
+      <button class="add-btn" style="margin-top:16px" id="addScannedBtn">+ Toevoegen aan daglijst</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="bottom-nav">
+  <button class="nav-item active" data-page="food">
+    <span class="nav-icon">🌱</span>
+    Database
+  </button>
+  <button class="nav-item" data-page="calc">
+    <span class="nav-icon">📊</span>
+    Calculator
+  </button>
+  <button class="nav-item" data-page="scan">
+    <span class="nav-icon">📷</span>
+    Scanner
+  </button>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-emoji" id="modalEmoji"></div>
+    <h2 id="modalName"></h2>
+    <p style="color:var(--text-light);font-size:13px" id="modalCategory"></p>
+
+    <table class="nutrition-mini" id="modalNutrition"></table>
+
+    <div class="gram-selector">
+      <button class="gram-btn" id="gramMinus">−</button>
+      <div>
+        <input type="number" class="gram-input" id="gramInput" value="100" min="1" max="2000">
+        <div class="gram-label">gram</div>
+      </div>
+      <button class="gram-btn" id="gramPlus">+</button>
+    </div>
+
+    <div class="modal-protein">
+      <div class="value" id="modalProteinCalc">0g</div>
+      <div class="label">eiwit</div>
+    </div>
+
+    <button class="add-btn" id="addToCalcBtn">+ Toevoegen aan daglijst</button>
+  </div>
+</div>
+
+<script>
+  // ===== FOOD DATABASE =====
+  const foods = [
+    // Zuivel
+    { name: "Griekse yoghurt", emoji: "🥛", protein: 10, cal: 97, fat: 5, carbs: 3.6, category: "Zuivel", portion: "100g" },
+    { name: "Kwark mager", emoji: "🥛", protein: 12, cal: 63, fat: 0.2, carbs: 4, category: "Zuivel", portion: "100g" },
+    { name: "Skyr", emoji: "🥛", protein: 11, cal: 63, fat: 0.2, carbs: 4, category: "Zuivel", portion: "100g" },
+    { name: "Cottage cheese", emoji: "🧀", protein: 12, cal: 98, fat: 4.3, carbs: 3.4, category: "Zuivel", portion: "100g" },
+    { name: "Ei (gekookt)", emoji: "🥚", protein: 13, cal: 155, fat: 11, carbs: 1.1, category: "Zuivel", portion: "100g (±2 eieren)" },
+    { name: "Mozzarella", emoji: "🧀", protein: 22, cal: 280, fat: 17, carbs: 3.1, category: "Zuivel", portion: "100g" },
+    { name: "Parmezaanse kaas", emoji: "🧀", protein: 35, cal: 431, fat: 29, carbs: 3.2, category: "Zuivel", portion: "100g" },
+    { name: "Melk halfvol", emoji: "🥛", protein: 3.5, cal: 47, fat: 1.5, carbs: 4.8, category: "Zuivel", portion: "100ml" },
+
+    // Plantaardig
+    { name: "Tofu", emoji: "🟫", protein: 17, cal: 144, fat: 8.7, carbs: 2.8, category: "Plantaardig", portion: "100g" },
+    { name: "Tempeh", emoji: "🟫", protein: 19, cal: 193, fat: 11, carbs: 9, category: "Plantaardig", portion: "100g" },
+    { name: "Seitan", emoji: "🟫", protein: 25, cal: 150, fat: 1.9, carbs: 4, category: "Plantaardig", portion: "100g" },
+    { name: "Linzen (gekookt)", emoji: "🫘", protein: 9, cal: 116, fat: 0.4, carbs: 20, category: "Plantaardig", portion: "100g" },
+    { name: "Kikkererwten (gekookt)", emoji: "🫘", protein: 9, cal: 164, fat: 2.6, carbs: 27, category: "Plantaardig", portion: "100g" },
+    { name: "Edamame", emoji: "🫛", protein: 11, cal: 122, fat: 5, carbs: 8.6, category: "Plantaardig", portion: "100g" },
+    { name: "Zwarte bonen", emoji: "🫘", protein: 9, cal: 132, fat: 0.5, carbs: 24, category: "Plantaardig", portion: "100g" },
+    { name: "Kidney bonen", emoji: "🫘", protein: 9, cal: 127, fat: 0.5, carbs: 22, category: "Plantaardig", portion: "100g" },
+    { name: "Hummus", emoji: "🫕", protein: 8, cal: 166, fat: 10, carbs: 14, category: "Plantaardig", portion: "100g" },
+    { name: "Sojabonen (gekookt)", emoji: "🫛", protein: 17, cal: 173, fat: 9, carbs: 10, category: "Plantaardig", portion: "100g" },
+    { name: "Groene erwten", emoji: "🟢", protein: 5, cal: 81, fat: 0.4, carbs: 14, category: "Plantaardig", portion: "100g" },
+    { name: "Vegetarische burger", emoji: "🍔", protein: 15, cal: 180, fat: 8, carbs: 15, category: "Plantaardig", portion: "per stuk (±100g)" },
+    { name: "Falafel", emoji: "🧆", protein: 13, cal: 333, fat: 18, carbs: 32, category: "Plantaardig", portion: "100g" },
+    { name: "Soja yoghurt", emoji: "🥛", protein: 4, cal: 54, fat: 2.3, carbs: 2.5, category: "Plantaardig", portion: "100g" },
+    { name: "Peanut butter protein", emoji: "🥜", protein: 30, cal: 400, fat: 18, carbs: 20, category: "Plantaardig", portion: "100g" },
+
+    // Noten & Zaden
+    { name: "Pindakaas", emoji: "🥜", protein: 25, cal: 588, fat: 50, carbs: 20, category: "Noten & Zaden", portion: "100g" },
+    { name: "Amandelen", emoji: "🌰", protein: 21, cal: 579, fat: 50, carbs: 22, category: "Noten & Zaden", portion: "100g" },
+    { name: "Pompoenpitten", emoji: "🎃", protein: 30, cal: 559, fat: 49, carbs: 11, category: "Noten & Zaden", portion: "100g" },
+    { name: "Chiazaad", emoji: "🌱", protein: 17, cal: 486, fat: 31, carbs: 42, category: "Noten & Zaden", portion: "100g" },
+    { name: "Hennepzaad", emoji: "🌱", protein: 32, cal: 553, fat: 49, carbs: 9, category: "Noten & Zaden", portion: "100g" },
+    { name: "Walnoten", emoji: "🌰", protein: 15, cal: 654, fat: 65, carbs: 14, category: "Noten & Zaden", portion: "100g" },
+    { name: "Cashewnoten", emoji: "🥜", protein: 18, cal: 553, fat: 44, carbs: 30, category: "Noten & Zaden", portion: "100g" },
+
+    // Granen
+    { name: "Havermout", emoji: "🥣", protein: 13, cal: 389, fat: 7, carbs: 66, category: "Granen", portion: "100g" },
+    { name: "Quinoa (gekookt)", emoji: "🌾", protein: 4.4, cal: 120, fat: 1.9, carbs: 21, category: "Granen", portion: "100g" },
+    { name: "Volkoren pasta (gekookt)", emoji: "🍝", protein: 5.3, cal: 124, fat: 0.5, carbs: 26, category: "Granen", portion: "100g" },
+    { name: "Volkoren brood", emoji: "🍞", protein: 9, cal: 247, fat: 3.4, carbs: 41, category: "Granen", portion: "100g (±3 sneetjes)" },
+
+    // Supplementen
+    { name: "Whey eiwit", emoji: "🥤", protein: 80, cal: 380, fat: 5, carbs: 8, category: "Supplementen", portion: "100g (±3 scoops)" },
+    { name: "Caseine eiwit", emoji: "🥤", protein: 75, cal: 370, fat: 4, carbs: 10, category: "Supplementen", portion: "100g (±3 scoops)" },
+    { name: "Eiwitreep", emoji: "🍫", protein: 20, cal: 220, fat: 8, carbs: 22, category: "Supplementen", portion: "per reep (±60g)" },
+    { name: "Plantaardig eiwit", emoji: "🥤", protein: 70, cal: 360, fat: 6, carbs: 12, category: "Supplementen", portion: "100g" },
+  ];
+
+  // ===== STATE =====
+  let dailyItems = JSON.parse(localStorage.getItem('dailyItems') || '[]');
+  let dailyGoal = parseInt(localStorage.getItem('dailyGoal') || '60');
+  let selectedFood = null;
+  let scannedProduct = null;
+  let cameraStream = null;
+  let scanInterval = null;
+
+  // ===== CATEGORIES =====
+  const allCategories = ["Alles", ...new Set(foods.map(f => f.category))];
+
+  function renderCategories() {
+    const el = document.getElementById('categories');
+    el.innerHTML = allCategories.map((c, i) =>
+      `<button class="category-pill ${i === 0 ? 'active' : ''}" data-cat="${c}">${c}</button>`
+    ).join('');
+
+    el.querySelectorAll('.category-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        el.querySelectorAll('.category-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderFoodList();
+      });
+    });
+  }
+
+  // ===== FOOD LIST =====
+  function renderFoodList() {
+    const search = document.getElementById('foodSearch').value.toLowerCase();
+    const activeCat = document.querySelector('.category-pill.active')?.dataset.cat || 'Alles';
+
+    let filtered = foods.filter(f => {
+      const matchSearch = f.name.toLowerCase().includes(search);
+      const matchCat = activeCat === 'Alles' || f.category === activeCat;
+      return matchSearch && matchCat;
+    });
+
+    const el = document.getElementById('foodList');
+    if (filtered.length === 0) {
+      el.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>Geen resultaten gevonden</p></div>`;
+      return;
+    }
+
+    el.innerHTML = filtered.map((f, i) => {
+      const level = f.protein >= 20 ? 'high' : f.protein >= 10 ? 'medium' : 'low';
+      return `
+        <div class="food-card" data-idx="${foods.indexOf(f)}">
+          <div class="food-emoji">${f.emoji}</div>
+          <div class="food-info">
+            <div class="food-name">${f.name}</div>
+            <div class="food-meta">${f.portion} · ${f.cal} kcal</div>
+          </div>
+          <div class="food-protein">
+            ${f.protein}g
+            <small>eiwit</small>
+          </div>
+        </div>`;
+    }).join('');
+
+    el.querySelectorAll('.food-card').forEach(card => {
+      card.addEventListener('click', () => openModal(foods[card.dataset.idx]));
+    });
+  }
+
+  // ===== MODAL =====
+  function openModal(food) {
+    selectedFood = food;
+    document.getElementById('modalEmoji').textContent = food.emoji;
+    document.getElementById('modalName').textContent = food.name;
+    document.getElementById('modalCategory').textContent = food.category + ' · ' + food.portion;
+    document.getElementById('gramInput').value = 100;
+
+    document.getElementById('modalNutrition').innerHTML = `
+      <tr><td>Calorieen</td><td>${food.cal} kcal</td></tr>
+      <tr><td>Eiwitten</td><td style="color:var(--primary);font-weight:700">${food.protein}g</td></tr>
+      <tr><td>Vetten</td><td>${food.fat}g</td></tr>
+      <tr><td>Koolhydraten</td><td>${food.carbs}g</td></tr>
+    `;
+
+    updateModalCalc();
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    selectedFood = null;
+  }
+
+  function updateModalCalc() {
+    if (!selectedFood) return;
+    const grams = parseInt(document.getElementById('gramInput').value) || 0;
+    const protein = ((selectedFood.protein * grams) / 100).toFixed(1);
+    document.getElementById('modalProteinCalc').textContent = protein + 'g';
+  }
+
+  document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  });
+
+  document.getElementById('gramPlus').addEventListener('click', () => {
+    const el = document.getElementById('gramInput');
+    el.value = Math.min(2000, parseInt(el.value || 0) + 25);
+    updateModalCalc();
+  });
+
+  document.getElementById('gramMinus').addEventListener('click', () => {
+    const el = document.getElementById('gramInput');
+    el.value = Math.max(1, parseInt(el.value || 0) - 25);
+    updateModalCalc();
+  });
+
+  document.getElementById('gramInput').addEventListener('input', updateModalCalc);
+
+  document.getElementById('addToCalcBtn').addEventListener('click', () => {
+    if (!selectedFood) return;
+    const grams = parseInt(document.getElementById('gramInput').value) || 100;
+    const protein = parseFloat(((selectedFood.protein * grams) / 100).toFixed(1));
+    dailyItems.push({
+      name: selectedFood.name,
+      emoji: selectedFood.emoji,
+      grams,
+      protein,
+      cal: Math.round((selectedFood.cal * grams) / 100)
+    });
+    saveAndUpdate();
+    closeModal();
+  });
+
+  // ===== CALCULATOR PAGE =====
+  function renderCalcList() {
+    const el = document.getElementById('calcList');
+    const empty = document.getElementById('emptyState');
+    const clearBtn = document.getElementById('clearAllBtn');
+
+    if (dailyItems.length === 0) {
+      el.innerHTML = '';
+      empty.style.display = 'block';
+      clearBtn.style.display = 'none';
+      return;
+    }
+
+    empty.style.display = 'none';
+    clearBtn.style.display = 'block';
+
+    el.innerHTML = dailyItems.map((item, i) => `
+      <div class="calc-item">
+        <div class="food-emoji">${item.emoji}</div>
+        <div class="food-info">
+          <div class="food-name">${item.name}</div>
+          <div class="food-meta">${item.grams}g · ${item.cal} kcal</div>
+        </div>
+        <div class="food-protein">${item.protein}g</div>
+        <button class="remove-btn" data-idx="${i}">×</button>
+      </div>
+    `).join('');
+
+    el.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        dailyItems.splice(parseInt(btn.dataset.idx), 1);
+        saveAndUpdate();
+      });
+    });
+  }
+
+  document.getElementById('clearAllBtn').addEventListener('click', () => {
+    if (confirm('Weet je zeker dat je alles wilt wissen?')) {
+      dailyItems = [];
+      saveAndUpdate();
+    }
+  });
+
+  // ===== GOAL =====
+  document.getElementById('goalInput').value = dailyGoal;
+  document.getElementById('goalInput').addEventListener('input', (e) => {
+    dailyGoal = parseInt(e.target.value) || 0;
+    localStorage.setItem('dailyGoal', dailyGoal);
+    updateSummary();
+  });
+
+  // ===== SUMMARY =====
+  function updateSummary() {
+    const total = dailyItems.reduce((sum, item) => sum + item.protein, 0);
+    const remain = Math.max(0, dailyGoal - total);
+    const pct = dailyGoal > 0 ? Math.min(100, (total / dailyGoal) * 100) : 0;
+
+    document.getElementById('totalProtein').textContent = total.toFixed(1) + 'g';
+    document.getElementById('goalProtein').textContent = dailyGoal + 'g';
+    document.getElementById('remainProtein').textContent = remain.toFixed(1) + 'g';
+    document.getElementById('progressFill').style.width = pct + '%';
+
+    if (pct >= 100) {
+      document.getElementById('progressFill').style.background = 'var(--success)';
+    } else {
+      document.getElementById('progressFill').style.background = 'var(--accent)';
+    }
+  }
+
+  function saveAndUpdate() {
+    localStorage.setItem('dailyItems', JSON.stringify(dailyItems));
+    renderCalcList();
+    updateSummary();
+  }
+
+  // ===== NAVIGATION =====
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('page-' + btn.dataset.page).classList.add('active');
+    });
+  });
+
+  // ===== SEARCH =====
+  document.getElementById('foodSearch').addEventListener('input', renderFoodList);
+
+  // ===== BARCODE SCANNER =====
+  async function startScanner() {
+    try {
+      const video = document.getElementById('scannerVideo');
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      video.srcObject = cameraStream;
+      document.getElementById('videoWrapper').style.display = 'block';
+      document.getElementById('startScanBtn').style.display = 'none';
+      document.getElementById('stopScanBtn').style.display = 'inline-flex';
+      document.getElementById('scanStatus').innerHTML = '<span class="loading-spinner"></span> Camera actief, scan een barcode...';
+
+      // Use BarcodeDetector API if available
+      if ('BarcodeDetector' in window) {
+        const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+        scanInterval = setInterval(async () => {
+          try {
+            const barcodes = await detector.detect(video);
+            if (barcodes.length > 0) {
+              const code = barcodes[0].rawValue;
+              document.getElementById('scanStatus').innerHTML = '<span class="loading-spinner"></span> Barcode gevonden: ' + code + ' — zoeken...';
+              stopScanner();
+              lookupBarcode(code);
+            }
+          } catch (e) { /* ignore detection errors */ }
+        }, 500);
+      } else {
+        document.getElementById('scanStatus').innerHTML = '⚠️ Je browser ondersteunt geen automatische barcode-detectie. Voer de barcode handmatig in.';
+      }
+    } catch (err) {
+      document.getElementById('scanStatus').textContent = '❌ Kan camera niet openen. Geef toestemming of voer de barcode handmatig in.';
+    }
+  }
+
+  function stopScanner() {
+    if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+    document.getElementById('videoWrapper').style.display = 'none';
+    document.getElementById('startScanBtn').style.display = 'inline-flex';
+    document.getElementById('stopScanBtn').style.display = 'none';
+  }
+
+  document.getElementById('startScanBtn').addEventListener('click', startScanner);
+  document.getElementById('stopScanBtn').addEventListener('click', () => {
+    stopScanner();
+    document.getElementById('scanStatus').textContent = '';
+  });
+
+  // ===== BARCODE LOOKUP =====
+  async function lookupBarcode(code) {
+    document.getElementById('scanStatus').innerHTML = '<span class="loading-spinner"></span> Product opzoeken...';
+    document.getElementById('scanResult').classList.remove('show');
+
+    try {
+      const resp = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+      const data = await resp.json();
+
+      if (data.status === 1 && data.product) {
+        const p = data.product;
+        const nutrients = p.nutriments || {};
+        const name = p.product_name || p.product_name_nl || 'Onbekend product';
+        const protein = nutrients.proteins_100g || nutrients.proteins || 0;
+        const cal = nutrients['energy-kcal_100g'] || nutrients['energy-kcal'] || 0;
+        const fat = nutrients.fat_100g || nutrients.fat || 0;
+        const carbs = nutrients.carbohydrates_100g || nutrients.carbohydrates || 0;
+
+        scannedProduct = { name, protein: parseFloat(protein), cal: Math.round(parseFloat(cal)), fat: parseFloat(fat), carbs: parseFloat(carbs) };
+
+        document.getElementById('scanProductName').textContent = name;
+        document.getElementById('nutrientGrid').innerHTML = `
+          <div class="nutrient-item highlight">
+            <div class="n-value">${parseFloat(protein).toFixed(1)}g</div>
+            <div class="n-label">Eiwit / 100g</div>
+          </div>
+          <div class="nutrient-item">
+            <div class="n-value">${Math.round(cal)}</div>
+            <div class="n-label">Kcal / 100g</div>
+          </div>
+          <div class="nutrient-item">
+            <div class="n-value">${parseFloat(fat).toFixed(1)}g</div>
+            <div class="n-label">Vet / 100g</div>
+          </div>
+          <div class="nutrient-item">
+            <div class="n-value">${parseFloat(carbs).toFixed(1)}g</div>
+            <div class="n-label">Koolhydraten / 100g</div>
+          </div>
+        `;
+
+        document.getElementById('scanResult').classList.add('show');
+        document.getElementById('scanStatus').textContent = '✅ Product gevonden!';
+      } else {
+        document.getElementById('scanStatus').textContent = '❌ Product niet gevonden in de database. Probeer een andere barcode.';
+      }
+    } catch (err) {
+      document.getElementById('scanStatus').textContent = '❌ Fout bij opzoeken. Controleer je internetverbinding.';
+    }
+  }
+
+  document.getElementById('barcodeSearchBtn').addEventListener('click', () => {
+    const code = document.getElementById('barcodeInput').value.trim();
+    if (code) lookupBarcode(code);
+  });
+
+  document.getElementById('barcodeInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const code = document.getElementById('barcodeInput').value.trim();
+      if (code) lookupBarcode(code);
+    }
+  });
+
+  document.getElementById('addScannedBtn').addEventListener('click', () => {
+    if (!scannedProduct) return;
+    dailyItems.push({
+      name: scannedProduct.name,
+      emoji: '📦',
+      grams: 100,
+      protein: scannedProduct.protein,
+      cal: scannedProduct.cal
+    });
+    saveAndUpdate();
+    document.getElementById('scanStatus').textContent = '✅ Toegevoegd aan je daglijst!';
+    setTimeout(() => {
+      document.getElementById('scanStatus').textContent = '';
+    }, 2000);
+  });
+
+  // ===== DAILY RESET CHECK =====
+  const today = new Date().toDateString();
+  const savedDate = localStorage.getItem('trackDate');
+  if (savedDate !== today) {
+    dailyItems = [];
+    localStorage.setItem('dailyItems', '[]');
+    localStorage.setItem('trackDate', today);
+  }
+
+  // ===== INIT =====
+  renderCategories();
+  renderFoodList();
+  renderCalcList();
+  updateSummary();
+</script>
+
+</body>
+</html>
